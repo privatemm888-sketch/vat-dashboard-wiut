@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VAT Refund BI Dashboard — MSc BIA WIUT</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#F0F4F8;color:#1C2B3A}
+.header{background:#1A3558;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-bottom:4px solid #F0A500}
+.header h1{font-size:17px;font-weight:700;color:#fff}
+.header p{font-size:11px;color:#A8C4E0;margin-top:2px}
+.badge{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:4px;padding:2px 10px;font-size:10px;color:#fff}
+.filters{background:#fff;border-bottom:1px solid #DDE3EC;padding:10px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.filter-group{display:flex;align-items:center;gap:6px}
+.filter-group label{font-size:12px;font-weight:600;color:#4A5568}
+.filter-group select{font-size:12px;padding:4px 8px;border:1px solid #DDE3EC;border-radius:6px;background:#F0F4F8;color:#1C2B3A}
+.obs{margin-left:auto;background:#E6F1FB;color:#185FA5;border-radius:20px;padding:3px 12px;font-size:11px;font-weight:600}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 24px}
+.kpi{background:#fff;border-radius:8px;border:1px solid #DDE3EC;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.kpi-top{height:4px}
+.kpi-body{padding:10px 14px}
+.kpi-label{font-size:10px;color:#718096;text-transform:uppercase;letter-spacing:0.6px;font-weight:600;margin-bottom:4px}
+.kpi-value{font-size:26px;font-weight:800;line-height:1}
+.kpi-unit{font-size:10px;color:#718096;margin-top:2px}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 24px 14px}
+.chart-card{background:#fff;border-radius:8px;border:1px solid #DDE3EC;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.chart-card.full{grid-column:1/-1}
+.chart-title{font-size:13px;font-weight:700;color:#1C2B3A;margin-bottom:2px}
+.chart-sub{font-size:11px;color:#718096;margin-bottom:10px}
+.chart-wrap{position:relative;height:240px}
+
+/* WHAT-IF CALCULATOR */
+.whatif{background:#fff;border-radius:8px;border:2px solid #1A3558;padding:18px 20px;box-shadow:0 2px 8px rgba(26,53,88,0.12);grid-column:1/-1}
+.whatif-title{font-size:14px;font-weight:700;color:#1A3558;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.whatif-badge{background:#F0A500;color:#1A3558;font-size:10px;font-weight:700;border-radius:4px;padding:2px 8px}
+.whatif-sub{font-size:11px;color:#718096;margin-bottom:16px}
+.whatif-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.slider-section{display:flex;flex-direction:column;gap:14px}
+.slider-group{background:#F8FAFC;border-radius:8px;padding:12px 14px;border:1px solid #E2E8F0}
+.slider-label{font-size:12px;font-weight:600;color:#4A5568;margin-bottom:6px;display:flex;justify-content:space-between}
+.slider-val{color:#1A3558;font-size:14px;font-weight:700}
+input[type=range]{width:100%;accent-color:#1A3558;height:6px;cursor:pointer}
+.results-section{display:flex;flex-direction:column;gap:10px}
+.result-card{border-radius:8px;padding:12px 14px;border:1px solid}
+.result-card.green{background:#E1F5EE;border-color:#1D9E75}
+.result-card.amber{background:#FEF9E7;border-color:#F0A500}
+.result-card.red{background:#FCEBEB;border-color:#C0392B}
+.result-title{font-size:11px;font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}
+.result-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.result-key{font-size:11px;color:#4A5568}
+.result-val{font-size:13px;font-weight:700}
+.risk-zone{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;font-weight:700;font-size:13px;margin-top:4px}
+.zone-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.whatif-chart{position:relative;height:180px;margin-top:10px}
+
+footer{background:#1A3558;color:#A8C4E0;text-align:center;padding:10px;font-size:10px;margin-top:8px}
+@media(max-width:700px){.kpi-row{grid-template-columns:1fr 1fr}.charts-grid{grid-template-columns:1fr}.whatif-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>VAT Refund BI Dashboard — Uzbekistan</h1>
+    <p>MSc Business Intelligence & Analytics · Westminster International University in Tashkent</p>
+  </div>
+  <div style="text-align:right">
+    <div style="font-size:11px;color:#A8C4E0">Student ID: 002110 · Period: 2020–2024</div>
+    <div class="badge" style="margin-top:4px">Live · Interactive · What-if Analysis</div>
+  </div>
+</div>
+
+<div class="filters">
+  <div class="filter-group"><label>Year</label>
+    <select id="fYear" onchange="render()">
+      <option value="all">All years</option>
+      <option>2020</option><option>2021</option><option>2022</option><option>2023</option><option>2024</option>
+    </select>
+  </div>
+  <div class="filter-group"><label>Sector</label>
+    <select id="fSector" onchange="render()">
+      <option value="all">All sectors</option>
+      <option>Agriculture</option><option>Industry</option><option>Trade</option><option>Services</option>
+    </select>
+  </div>
+  <div class="filter-group"><label>Metric</label>
+    <select id="fMetric" onchange="render()">
+      <option value="cf">Cash Flow</option>
+      <option value="days">Refund Delay</option>
+      <option value="cr">Current Ratio</option>
+      <option value="refund">VAT Refund</option>
+    </select>
+  </div>
+  <div class="obs" id="obsCount">n = 200 observations</div>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="kpi-top" style="background:#2D6FA4"></div><div class="kpi-body">
+    <div class="kpi-label">Avg operating cash flow</div>
+    <div class="kpi-value" id="kCF" style="color:#2D6FA4">−446</div>
+    <div class="kpi-unit">mln UZS</div>
+  </div></div>
+  <div class="kpi"><div class="kpi-top" style="background:#E07B39"></div><div class="kpi-body">
+    <div class="kpi-label">Avg refund delay</div>
+    <div class="kpi-value" id="kDays" style="color:#E07B39">62.9</div>
+    <div class="kpi-unit">calendar days</div>
+  </div></div>
+  <div class="kpi"><div class="kpi-top" style="background:#27AE60"></div><div class="kpi-body">
+    <div class="kpi-label">Avg current ratio</div>
+    <div class="kpi-value" id="kCR" style="color:#27AE60">1.35</div>
+    <div class="kpi-unit">target ≥ 1.5</div>
+  </div></div>
+  <div class="kpi"><div class="kpi-top" style="background:#C0392B"></div><div class="kpi-body">
+    <div class="kpi-label">Refund coverage ratio</div>
+    <div class="kpi-value" id="kRefund" style="color:#C0392B">75.9%</div>
+    <div class="kpi-unit">2024 (up from 28.7% in 2020)</div>
+  </div></div>
+</div>
+
+<div class="charts-grid">
+  <div class="chart-card">
+    <div class="chart-title">Cash flow vs refund delay</div>
+    <div class="chart-sub">Scatter by sector · β = −10.39 · r = −0.723 · p &lt; 0.001</div>
+    <div class="chart-wrap"><canvas id="c1"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">Average cash flow by sector</div>
+    <div class="chart-sub">Mean operating cash flow (mln UZS)</div>
+    <div class="chart-wrap"><canvas id="c2"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">Refund delay by sector and year</div>
+    <div class="chart-sub">Average processing days</div>
+    <div class="chart-wrap"><canvas id="c3"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">VAT refunds vs negative balances</div>
+    <div class="chart-sub">Macro trend 2020–2024 (bln UZS)</div>
+    <div class="chart-wrap"><canvas id="c4"></canvas></div>
+  </div>
+
+  <!-- WHAT-IF CALCULATOR -->
+  <div class="whatif">
+    <div class="whatif-title">
+      🎯 What-if Analysis — Liquidity Stress Test
+      <span class="whatif-badge">Decision Support</span>
+    </div>
+    <div class="whatif-sub">Simulate how changes in VAT refund processing time affect enterprise liquidity. Move the sliders to model different scenarios.</div>
+
+    <div class="whatif-grid">
+      <div class="slider-section">
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>VAT Refund Processing Time</span>
+            <span class="slider-val" id="daysVal">62 days</span>
+          </div>
+          <input type="range" id="slDays" min="15" max="120" value="62" oninput="updateWhatif()">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#718096;margin-top:2px">
+            <span>15 days (best)</span><span>120 days (worst)</span>
+          </div>
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Annual Turnover</span>
+            <span class="slider-val" id="turnoverVal">4,821 mln UZS</span>
+          </div>
+          <input type="range" id="slTurnover" min="500" max="15000" value="4821" step="100" oninput="updateWhatif()">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#718096;margin-top:2px">
+            <span>500 (small)</span><span>15,000 (large)</span>
+          </div>
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Sector</span>
+          </div>
+          <select id="slSector" onchange="updateWhatif()" style="width:100%;font-size:12px;padding:6px;border:1px solid #DDE3EC;border-radius:6px;background:#fff">
+            <option value="industry">Industry (highest risk)</option>
+            <option value="agriculture">Agriculture</option>
+            <option value="trade">Trade</option>
+            <option value="services" selected>Services (lowest risk)</option>
+          </select>
+        </div>
+
+        <div class="whatif-chart">
+          <canvas id="cWhatif"></canvas>
+        </div>
+      </div>
+
+      <div class="results-section">
+        <div id="riskCard" class="result-card green">
+          <div class="result-title" id="riskTitle">🟢 Green Zone — Low Risk</div>
+          <div class="result-row"><span class="result-key">Predicted Cash Flow</span><span class="result-val" id="rCF">−112.5 mln UZS</span></div>
+          <div class="result-row"><span class="result-key">Predicted Current Ratio</span><span class="result-val" id="rCR">1.42</span></div>
+          <div class="result-row"><span class="result-key">Quick Ratio (est.)</span><span class="result-val" id="rQR">1.16</span></div>
+          <div class="result-row"><span class="result-key">Frozen VAT / Cash Flow</span><span class="result-val" id="rFrozen">18.3%</span></div>
+          <div class="result-row"><span class="result-key">Risk Score</span><span class="result-val" id="rScore">0.21</span></div>
+        </div>
+
+        <div style="background:#F8FAFC;border-radius:8px;padding:12px 14px;border:1px solid #E2E8F0;font-size:11px;color:#4A5568;line-height:1.6">
+          <strong style="color:#1A3558">Regression formula applied:</strong><br>
+          Cash Flow = 207.34 − 10.39 × Days + 0.031 × Turnover<br><br>
+          <strong style="color:#1A3558">Risk classification:</strong><br>
+          🟢 Green: delay &lt; 45 days, CF &gt; 0<br>
+          🟡 Amber: delay 45–75 days, CF −100 to 0<br>
+          🔴 Red: delay &gt; 75 days, CF &lt; −100 mln<br><br>
+          <strong style="color:#1A3558">Policy insight:</strong><br>
+          Each +10 days delay → −103.9 mln UZS cash flow impact
+        </div>
+
+        <div style="background:#E6F1FB;border-radius:8px;padding:10px 14px;border:1px solid #AED6F1;font-size:11px;color:#1C2B3A">
+          <strong>Lag effect (Section 4.6.4):</strong><br>
+          Maximum liquidity shock occurs at t+1:<br>
+          β(t) = −10.39 · β(t−1) = −12.14 · β(t−2) = −8.73
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Source: State Tax Committee of the Republic of Uzbekistan & anonymised enterprise dataset (E001–E050, n=200) &nbsp;|&nbsp;
+  r = −0.723 · R² = 0.523 · β = −10.39 · p &lt; 0.001 &nbsp;|&nbsp;
+  MSc BIA Dissertation · WIUT 2024–2025
+</footer>
+
+<script>
+const COLORS = {Agriculture:'#1D9E75',Industry:'#2D6FA4',Trade:'#C0392B',Services:'#E07B39'};
+const SECTORS = ['Agriculture','Industry','Trade','Services'];
+const YEARS = [2020,2021,2022,2023,2024];
+
+const STATS = {
+  Agriculture:{n:63,cf:-474.1,days:67.3,cr:1.37,qr:1.12,refund:168},
+  Industry:    {n:50,cf:-673.7,days:81.0,cr:1.35,qr:1.10,refund:142},
+  Trade:       {n:46,cf:-337.1,days:53.9,cr:1.34,qr:1.09,refund:148},
+  Services:    {n:41,cf:-249.2,days:44.4,cr:1.31,qr:1.07,refund:164},
+  all:         {n:200,cf:-446,days:62.9,cr:1.35,qr:1.10,refund:154}
+};
+
+const DELAYS = {
+  Agriculture:[58.2,72.1,65.4,69.8,70.9],
+  Industry:   [74.3,83.2,85.6,80.1,82.0],
+  Trade:      [37.4,51.2,57.8,58.4,64.6],
+  Services:   [36.1,43.8,40.2,42.1,60.0]
+};
+
+const SCATTER = {
+  Agriculture:{days:[57,45,61,49,57,46,49,37,66,49,100,64,42,81,73,39,67,76,94,55,41,84,93,34,62],cf:[-646,-193,-784,-309,-921,-520,-275,-920,-185,-410,-522,-1139,-436,-265,-323,-771,-814,-213,-651,-172,-927,-742,-712,-675,-377]},
+  Industry:   {days:[50,95,44,71,46,70,80,70,85,110,99,117,82,118,85,87,97,118,50,73,63,76,100,85,87],cf:[-679,-315,-197,-430,-801,-678,-900,-449,-531,-755,-475,-1511,-761,-1008,-626,-1136,-810,-694,-539,-1134,-534,-457,-607,-763,-1136]},
+  Trade:      {days:[25,41,53,60,29,30,32,64,59,87,85,34,74,77,54,36,70,85,39,45,88,33,36,70,37],cf:[-95,-180,-244,-339,-157,-323,-145,-504,-277,-394,-771,-141,-392,-464,-214,-197,-483,-362,-409,-245,-1114,-59,-580,-697,-746]},
+  Services:   {days:[39,45,36,59,62,33,23,69,56,55,62,34,20,27,49,40,53,21,48,68,41,56,63,20,70],cf:[-398,-400,-238,-509,-388,-160,-394,-363,-394,-893,-325,-176,-145,-203,-41,-209,-84,-53,-351,-686,-261,-441,-373,82,-131]}
+};
+
+const MACRO_REFUND = [2112.5,7807.3,9839.0,11503.8,12608.7];
+const MACRO_NEG    = [7359.5,10248.7,13798.0,15496.7,16621.6];
+
+let charts = {};
+let whatifChart = null;
+
+function destroyAll(){Object.values(charts).forEach(c=>c&&c.destroy());charts={};}
+
+function render(){
+  destroyAll();
+  const yF = document.getElementById('fYear').value;
+  const sF = document.getElementById('fSector').value;
+  const mF = document.getElementById('fMetric').value;
+  const st = STATS[sF] || STATS['all'];
+
+  document.getElementById('kCF').textContent = (st.cf<0?'−':'')+Math.abs(Math.round(st.cf));
+  document.getElementById('kDays').textContent = st.days.toFixed(1);
+  document.getElementById('kCR').textContent = st.cr.toFixed(2);
+  document.getElementById('obsCount').textContent = 'n = '+st.n+' observations';
+
+  // Scatter
+  const activeSectors = sF==='all'?SECTORS:[sF];
+  const scatterDS = activeSectors.map(s=>({
+    label:s, type:'scatter',
+    data: SCATTER[s].days.map((x,i)=>({x,y:SCATTER[s].cf[i]})),
+    backgroundColor:COLORS[s]+'88', borderColor:COLORS[s], pointRadius:3.5
+  }));
+  scatterDS.push({label:'Regression',type:'line',data:[{x:15,y:Math.round(207.34-10.39*15)},{x:120,y:Math.round(207.34-10.39*120)}],borderColor:'#1A3558',borderWidth:2,borderDash:[6,3],pointRadius:0,fill:false});
+  charts.c1 = new Chart(document.getElementById('c1'),{type:'scatter',data:{datasets:scatterDS},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Refund delay (days)',font:{size:10}},min:10,max:130},y:{title:{display:true,text:'Cash flow (mln UZS)',font:{size:10}},min:-1600,max:300}}}});
+
+  // Bar by sector
+  const mMap = {cf:'cf',days:'days',cr:'cr',refund:'refund'};
+  const mLabel = {cf:'Cash flow (mln UZS)',days:'Avg delay (days)',cr:'Current ratio',refund:'VAT refund (mln UZS)'};
+  charts.c2 = new Chart(document.getElementById('c2'),{type:'bar',data:{labels:activeSectors,datasets:[{label:mLabel[mF],data:activeSectors.map(s=>+STATS[s][mMap[mF]].toFixed(1)),backgroundColor:activeSectors.map(s=>COLORS[s]+'CC'),borderColor:activeSectors.map(s=>COLORS[s]),borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{title:{display:true,text:mLabel[mF],font:{size:10}}}}}});
+
+  // Delay by sector/year
+  const delayDS = activeSectors.map(s=>({label:s,data:yF==='all'?DELAYS[s]:[DELAYS[s][YEARS.indexOf(+yF)]],backgroundColor:COLORS[s]+'BB',borderColor:COLORS[s],borderWidth:1}));
+  charts.c3 = new Chart(document.getElementById('c3'),{type:'bar',data:{labels:yF==='all'?YEARS:[yF],datasets:delayDS},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:10,font:{size:10}}}},scales:{y:{title:{display:true,text:'Days',font:{size:10}},min:0,max:110}}}});
+
+  // Macro line
+  const refData = yF==='all'?MACRO_REFUND:[MACRO_REFUND[YEARS.indexOf(+yF)]];
+  const negData = yF==='all'?MACRO_NEG:[MACRO_NEG[YEARS.indexOf(+yF)]];
+  charts.c4 = new Chart(document.getElementById('c4'),{type:'line',data:{labels:yF==='all'?YEARS:[yF],datasets:[{label:'VAT refunded',data:refData,borderColor:'#2D6FA4',backgroundColor:'#2D6FA422',fill:true,tension:0.3,borderWidth:2,pointRadius:4},{label:'Negative VAT balance',data:negData,borderColor:'#C0392B',backgroundColor:'#C0392B11',fill:true,tension:0.3,borderWidth:2,pointRadius:4,borderDash:[5,3]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:10,font:{size:10}}}},scales:{y:{title:{display:true,text:'bln UZS',font:{size:10}}}}}});
+
+  updateWhatif();
+}
+
+function updateWhatif(){
+  const days = +document.getElementById('slDays').value;
+  const turnover = +document.getElementById('slTurnover').value;
+  const sector = document.getElementById('slSector').value;
+
+  document.getElementById('daysVal').textContent = days+' days';
+  document.getElementById('turnoverVal').textContent = turnover.toLocaleString()+' mln UZS';
+
+  // Regression: CF = 207.34 - 10.39*days + 0.031*turnover + sector_effect
+  const sectorEffect = {industry:0, agriculture:87.4, trade:124.6, services:198.3};
+  const cf = 207.34 - 10.39*days + 0.031*turnover + (sectorEffect[sector]||0);
+  const cr = Math.max(0.5, 1.35 + (62.9-days)*0.008 + (turnover-4821)*0.00002);
+  const qr = cr * 0.815;
+  const frozenVAT = Math.max(0, -cf * 0.183);
+  const frozenRatio = cf < 0 ? Math.min(99, Math.abs(frozenVAT/cf)*100) : 0;
+  const riskScore = Math.max(0, Math.min(1, 0.021*days - 0.000008*turnover + 0.1));
+
+  document.getElementById('rCF').textContent = (cf<0?'−':'')+Math.abs(cf).toFixed(1)+' mln UZS';
+  document.getElementById('rCR').textContent = cr.toFixed(2);
+  document.getElementById('rQR').textContent = qr.toFixed(2);
+  document.getElementById('rFrozen').textContent = frozenRatio.toFixed(1)+'%';
+  document.getElementById('rScore').textContent = riskScore.toFixed(2);
+
+  const card = document.getElementById('riskCard');
+  const title = document.getElementById('riskTitle');
+  card.className = 'result-card';
+  if(days > 75 && cf < -100){
+    card.classList.add('red');
+    title.textContent = '🔴 Red Zone — High Liquidity Risk';
+  } else if(days > 45 || cf < 0){
+    card.classList.add('amber');
+    title.textContent = '🟡 Amber Zone — Moderate Risk';
+  } else {
+    card.classList.add('green');
+    title.textContent = '🟢 Green Zone — Low Risk';
+  }
+
+  // What-if projection chart — show CF over range of days
+  const dayRange = Array.from({length:11},(_,i)=>15+i*10);
+  const cfRange = dayRange.map(d=>207.34-10.39*d+0.031*turnover+(sectorEffect[sector]||0));
+  const currentIdx = dayRange.findIndex(d=>d>=days);
+
+  if(whatifChart) whatifChart.destroy();
+  whatifChart = new Chart(document.getElementById('cWhatif'),{
+    type:'line',
+    data:{
+      labels:dayRange,
+      datasets:[
+        {label:'Predicted Cash Flow',data:cfRange,borderColor:'#2D6FA4',backgroundColor:'#2D6FA422',fill:true,tension:0.3,borderWidth:2,pointRadius:4,pointBackgroundColor:dayRange.map((_,i)=>i===currentIdx?'#F0A500':'#2D6FA4'),pointRadius:dayRange.map((_,i)=>i===currentIdx?8:3)},
+        {label:'Critical threshold (−100)',data:dayRange.map(()=>-100),borderColor:'#C0392B',borderWidth:1.5,borderDash:[5,3],pointRadius:0,fill:false}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:10,font:{size:9}}},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y.toFixed(0)} mln UZS`}}},scales:{x:{title:{display:true,text:'Processing days',font:{size:9}}},y:{title:{display:true,text:'Cash flow (mln UZS)',font:{size:9}},min:-1200,max:400}}}
+  });
+}
+
+render();
+</script>
+</body>
+</html>
